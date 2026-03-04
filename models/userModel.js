@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
+const sequelize = require("../config/db");
 
 const User = sequelize.define(
     "User",
@@ -43,6 +43,15 @@ const User = sequelize.define(
         },
         verificationToken: {
             type: DataTypes.STRING,
+            allowNull: true,
+        },
+        resetToken: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        resetTokenExpiry: {
+            type: DataTypes.DATE,
+            allowNull: true,
         },
     },
     {
