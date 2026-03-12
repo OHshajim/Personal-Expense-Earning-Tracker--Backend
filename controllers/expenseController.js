@@ -1,0 +1,46 @@
+import Expense from "../models/expenseModel";
+import History from "../models/historyModel";
+
+export const createExpense = async (req, res) => {
+    const { title, targetAmount, totalDeposited, deadline, category } = req.body;
+    if (!title || !targetAmount || !deadline || !category) {
+        return res.status(400).json({ success: false, error: "Please provide title, target amount, deadline and category" });
+    }
+    try {
+        
+        const expense = await Expense.create({
+            title,
+            targetAmount,
+            totalDeposited,
+            remainingAmount: targetAmount - totalDeposited,
+            UserId: req.user.id,
+            deadline,
+            category,
+            dailyOutcome: targetAmount / Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24)),
+        }); 
+        if (totalDeposited > 0) {   
+            await History.create({
+                type: "deposit",
+                amount: totalDeposited,
+                purpose: title,
+                UserId: req.user.id,
+                ExpenseId: expense.id,
+            });
+        }
+        res.status(201).json({ success: true, expense });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};
+
+export const getExpenses = async (req, res) => {
+    try {
+        const expenses = await Expense.findAll({
+            where: { UserId: req.user.id },
+            order: [["createdAt", "DESC"]],
+        });
+        res.json({ success: true, expenses });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};

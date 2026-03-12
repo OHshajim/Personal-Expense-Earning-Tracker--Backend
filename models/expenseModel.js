@@ -1,6 +1,6 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
-const User = require("./userModel");
+import { DataTypes } from "sequelize";
+import { sequelize } from "../config/db.js";
+import User from "./userModel.js";
 
 const Expense = sequelize.define(
     "Expense",
@@ -11,6 +11,10 @@ const Expense = sequelize.define(
         totalBorrowed: { type: DataTypes.FLOAT, defaultValue: 0 },
         remainingAmount: { type: DataTypes.FLOAT, defaultValue: 0 },
         status: { type: DataTypes.STRING, defaultValue: "active" },
+        outcome: { type: DataTypes.FLOAT, defaultValue: 0 },
+        deadline: DataTypes.DATE,
+        dailyOutcome: { type: DataTypes.FLOAT, defaultValue: 0 },
+        category: DataTypes.STRING,
     },
     {
         timestamps: true,
@@ -20,4 +24,4 @@ const Expense = sequelize.define(
 User.hasMany(Expense);
 Expense.belongsTo(User);
 
-module.exports = Expense;
+export default Expense;

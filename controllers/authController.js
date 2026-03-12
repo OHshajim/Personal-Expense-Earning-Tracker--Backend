@@ -1,43 +1,76 @@
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
-const User = require("../models/userModel");
-const generateToken = require("../utils/generateToken");
-const sendEmail = require("../utils/sendEmail");
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import User from "../models/userModel.js";
+import generateToken from "../utils/generateToken.js";
+import sendEmail from "../utils/sendEmail.js";
+import { uploadToCloudflare } from "../utils/cloudflareUpload.js";
 
-exports.signup = async (req, res) => {
+export const signup = async (req, res) => {
     try {
-        const { fullName, email, password } = req.body;
+        const {
+            fullName,
+            email,
+            password,
+            phone,
+            whatsapp,
+            ageGroup,
+            employmentType
+        } = req.body;
+
         const existingUser = await User.findOne({ where: { email } });
-        if (existingUser)
-            return res.status(400).json({ message: "Email already exists" });
-        
+        if (existingUser) return res.status(400).json({ message: "Email already exists" });
+
+        let imageUrl = null;
+        if (req.file) {
+            imageUrl = await uploadToCloudflare(req.file);
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
         const verificationToken = crypto.randomBytes(32).toString("hex");
         
         const user = await User.create({
             fullName,
             email,
+            imageUrl,
+            phone,
+            whatsapp,
+            ageGroup,
+            employmentType,
             password: hashedPassword,
             verificationToken,
         });
 
-        const verificationLink = `http://localhost:5000/api/auth/verify/${verificationToken}`;
-
-        await sendEmail(
-            email,
-            "Verify your email",
-            `Click to verify: ${verificationLink}`,
-        );
-
+        const token = generateToken(user);
+        
         res.status(201).json({
-            message: "Signup successful. Please verify your email.",
+            message: "Signup successful",
+            user,
+            token
         });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
     }
 };
 
-exports.verifyEmail = async (req, res) => {
+export const sendVerificationEmail = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findOne({ where: { id } });
+        if (!user) return res.status(400).json({ message: "Invalid token" });
+
+        const verificationLink = `${process.env.FRONTEND_URL}/api/auth/verify/${user.verificationToken}`;
+            await sendEmail(
+                user.email,
+                "Verify your email",
+                `Click to verify: ${verificationLink}`,
+        );
+
+        res.json({ message: "Email sent successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const verifyEmail = async (req, res) => {
     try {
         const { token } = req.params;
 
@@ -57,7 +90,7 @@ exports.verifyEmail = async (req, res) => {
     }
 };
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -79,13 +112,14 @@ exports.login = async (req, res) => {
         res.json({
             message: "Login successful",
             token,
+            user
         });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
     }
 };
 
-exports.forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
         const user = await User.findOne({ where: { email } });
@@ -109,7 +143,7 @@ exports.forgotPassword = async (req, res) => {
     }
 };
 
-exports.resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
     const { token, newPassword } = req.body;
     const user = await User.findOne({ where: { resetToken: token } });
 
