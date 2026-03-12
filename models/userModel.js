@@ -65,6 +65,16 @@ const User = sequelize.define(
             type: DataTypes.STRING,
             defaultValue: "en",
         },
+        notificationPreferences: {
+            type: DataTypes.JSON,
+            defaultValue: {
+                dailyDeposit: true,
+                borrowAlert: true,
+                lowBalance: true,
+                completion: true,
+                channel: ["push"],
+            },
+        },
     },
     {
         timestamps: true,
