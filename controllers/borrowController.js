@@ -1,6 +1,5 @@
 import Expense from "../models/expenseModel.js";
 import History from "../models/historyModel.js";
-import Expense from "../models/expenseModel.js";
 
 export const borrowCheck = async (req, res) => {
     try {
@@ -111,7 +110,7 @@ export const createBorrow = async (req, res) => {
 
             expense.totalDeposited -= borrowShare;
             expense.borrowedAmount += borrowShare;
-
+            expense.outcome -= borrowShare;
             await expense.save();
 
             // save history (LOSS)
@@ -138,13 +137,13 @@ export const createBorrow = async (req, res) => {
 
 export const getBorrows = async (req, res) => {
     try {
-        const borrowHistory = await History.findAll({
+        const allBorrows = await History.findAll({
             where: { UserId: req.user.id, type: "borrow" },
             include: [{ model: Expense, attributes: ["title"] }],
         });
         res.json({
             success: true,
-            borrowHistory,
+            allBorrows,
         });
     } catch (error) {
         res.status(500).json({

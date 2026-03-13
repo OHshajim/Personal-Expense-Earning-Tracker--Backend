@@ -1,13 +1,30 @@
-import Expense from "../models/expenseModel";
-import History from "../models/historyModel";
+import Expense from "../models/expenseModel.js";
+import History from "../models/historyModel.js";
 
 export const createExpense = async (req, res) => {
-    const { title, targetAmount, totalDeposited, deadline, category } = req.body;
-    if (!title || !targetAmount || !deadline || !category) {
-        return res.status(400).json({ success: false, error: "Please provide title, target amount, deadline and category" });
+    const {
+        title,
+        targetAmount,
+        totalDeposited,
+        deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        category,
+    } = req.body;
+    if (
+        !title ||
+        !targetAmount ||
+        !deadline ||
+        !category ||
+        totalDeposited < 0
+    ) {
+        return res
+            .status(400)
+            .json({
+                success: false,
+                error: "Please provide valid expense details",
+            });
     }
+
     try {
-        
         const expense = await Expense.create({
             title,
             targetAmount,
@@ -16,17 +33,19 @@ export const createExpense = async (req, res) => {
             UserId: req.user.id,
             deadline,
             category,
-            dailyOutcome: targetAmount / Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24)),
-        }); 
-        if (totalDeposited > 0) {   
-            await History.create({
-                type: "deposit",
-                amount: totalDeposited,
-                purpose: title,
-                UserId: req.user.id,
-                ExpenseId: expense.id,
-            });
-        }
+            dailyOutcome:
+                targetAmount /
+                Math.ceil(
+                    (new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24),
+                ),
+        });
+        await History.create({
+            type: "deposit",
+            amount: totalDeposited,
+            purpose: title,
+            UserId: req.user.id,
+            ExpenseId: expense.id,
+        });
         res.status(201).json({ success: true, expense });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });

@@ -1,9 +1,7 @@
-// utils/notificationScheduler.js
 import cron from "node-cron";
 import User from "../models/userModel.js";
 import { sendNotification } from "./sendPushNotification.js";
 import Expense from "../models/expenseModel.js";
-import History from "../models/historyModel.js";
 
 export const startNotificationScheduler = () => {
     // Run every hour

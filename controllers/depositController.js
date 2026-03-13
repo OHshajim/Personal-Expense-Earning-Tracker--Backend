@@ -4,7 +4,6 @@ import History from "../models/historyModel.js";
 export const postDeposit = async (req, res) => {
     try {
         const { deposits } = req.body;
-
         if (!deposits || deposits.length === 0) {
             return res.status(400).json({
                 success: false,
@@ -17,15 +16,12 @@ export const postDeposit = async (req, res) => {
 
         for (const item of deposits) {
             const { expenseId, amount } = item;
-
             if (!amount || amount <= 0) continue;
 
             const expense = await Expense.findByPk(expenseId);
-
             if (!expense) continue;
 
-            const outcome = amount - (expense.dailyOutcome || 0);
-
+            const outcome = amount - expense.dailyOutcome;
             expense.totalDeposited += Number(amount);
             expense.remainingAmount -= Number(amount);
             expense.outcome += outcome;
@@ -46,12 +42,7 @@ export const postDeposit = async (req, res) => {
 
             totalOutcome += outcome;
 
-            results.push({
-                expenseId,
-                title: expense.title,
-                deposited: amount,
-                outcome,
-            });
+            results.push(expense);
         }
 
         res.status(201).json({

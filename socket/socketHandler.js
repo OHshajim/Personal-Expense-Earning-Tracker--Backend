@@ -9,6 +9,7 @@ export const initSocket = (server) => {
     io.on("connection", (socket) => {
         const { userId } = socket.handshake.query;
         if (userId) onlineUsers.set(userId, socket.id);
+        socket.join(userId);
 
         socket.on("disconnect", () => {
             onlineUsers.delete(userId);

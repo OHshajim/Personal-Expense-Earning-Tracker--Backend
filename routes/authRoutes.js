@@ -1,9 +1,10 @@
 import express from "express";
-import { forgotPassword, login, resetPassword, signup, verifyEmail } from "../controllers/authController.js";
+import { forgotPassword, login, resetPassword, sendVerificationEmail, signup, verifyEmail } from "../controllers/authController.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
-router.post("/signup", signup);
+router.post("/signup", upload.single("avatar"), signup);
 router.post("/login", login);
 router.post("/sendVerificationEmail/:id", sendVerificationEmail);
 router.get("/verify/:token", verifyEmail);

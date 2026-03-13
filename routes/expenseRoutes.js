@@ -1,6 +1,7 @@
 import express from "express";
-import { createExpense, getExpenses } from "../controllers/expenseController";
-import { protect } from "../middleware/authMiddleware";
+
+import { createExpense, getExpenses } from "../controllers/expenseController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 

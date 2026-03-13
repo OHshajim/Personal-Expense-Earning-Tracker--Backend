@@ -1,6 +1,6 @@
-const express = require("express");
-const { protect } = require("../middleware/authMiddleware");
-const { postDeposit, getDeposits } = require("../controllers/depositController");
+import express from "express";
+import { postDeposit, getDeposits } from "../controllers/depositController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 

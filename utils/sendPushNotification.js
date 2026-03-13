@@ -1,4 +1,3 @@
-// utils/sendPushNotification.js
 import Notification from "../models/notificationModel.js";
 import sendEmail from "./sendEmail.js";
 import { sendRealtimeNotification } from "../socket/socketHandler.js";

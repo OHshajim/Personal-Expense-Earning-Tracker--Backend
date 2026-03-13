@@ -3,7 +3,8 @@ import crypto from "crypto";
 import User from "../models/userModel.js";
 import generateToken from "../utils/generateToken.js";
 import sendEmail from "../utils/sendEmail.js";
-import { uploadToCloudflare } from "../utils/cloudflareUpload.js";
+import { uploadImage } from "../utils/imageUpload.js";
+import { getIoInstance } from "../socket/socketHandler.js";
 
 export const signup = async (req, res) => {
     try {
@@ -19,10 +20,9 @@ export const signup = async (req, res) => {
 
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) return res.status(400).json({ message: "Email already exists" });
-
-        let imageUrl = null;
+        let profileImage = null;
         if (req.file) {
-            imageUrl = await uploadToCloudflare(req.file);
+            profileImage = await uploadImage(req.file);
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const verificationToken = crypto.randomBytes(32).toString("hex");
@@ -30,7 +30,7 @@ export const signup = async (req, res) => {
         const user = await User.create({
             fullName,
             email,
-            imageUrl,
+            profileImage,
             phone,
             whatsapp,
             ageGroup,
@@ -43,8 +43,18 @@ export const signup = async (req, res) => {
         
         res.status(201).json({
             message: "Signup successful",
-            user,
-            token
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                profileImage: user.profileImage,
+                phone: user.phone,
+                whatsapp: user.whatsapp,
+                ageGroup: user.ageGroup,
+                employmentType: user.employmentType,
+                isVerified: user.isVerified || false,
+            },
+            token,
         });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
@@ -83,7 +93,8 @@ export const verifyEmail = async (req, res) => {
         user.isVerified = true;
         user.verificationToken = null;
         await user.save();
-
+        const io = getIoInstance();
+        io.to(user.id).emit("userVerified", { userId: user.id, email: user.email });
         res.json({ message: "Email verified successfully" });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
@@ -98,11 +109,6 @@ export const login = async (req, res) => {
         if (!user)
             return res.status(400).json({ message: "Invalid credentials" });
 
-        if (!user.isVerified)
-            return res
-                .status(403)
-                .json({ message: "Please verify your email" });
-
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch)
             return res.status(400).json({ message: "Invalid credentials" });
@@ -112,7 +118,17 @@ export const login = async (req, res) => {
         res.json({
             message: "Login successful",
             token,
-            user
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                profileImage: user.profileImage,
+                phone: user.phone,
+                whatsapp: user.whatsapp,
+                ageGroup: user.ageGroup,
+                employmentType: user.employmentType,
+                isVerified: user.isVerified || false,
+            },
         });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
