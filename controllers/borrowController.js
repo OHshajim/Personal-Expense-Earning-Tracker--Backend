@@ -1,10 +1,11 @@
 import Expense from "../models/expenseModel.js";
 import History from "../models/historyModel.js";
+import { sendNotification } from "../utils/sendPushNotification.js";
 
 export const borrowCheck = async (req, res) => {
     try {
         const { expenseIds } = req.body;
-
+        
         if (!expenseIds || expenseIds.length === 0) {
             return res.status(400).json({
                 success: false,
@@ -109,9 +110,22 @@ export const createBorrow = async (req, res) => {
             borrowShare = Math.round(borrowShare);
 
             expense.totalDeposited -= borrowShare;
-            expense.borrowedAmount += borrowShare;
+            expense.totalBorrowed += borrowShare;
             expense.outcome -= borrowShare;
+
             await expense.save();
+            if (
+                expense.totalDeposited < 500 &&
+                req.user.notificationPreferences?.warningAlert?.enabled
+            ) {
+                await sendNotification(
+                    req.user,
+                    "lowBalance",
+                    "Low Balance Warning",
+                    "Oops! Your remaining deposits are running low.",
+                    { TotalDeposited: expense.totalDeposited },
+                );
+            }
 
             // save history (LOSS)
             await History.create({

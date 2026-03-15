@@ -1,5 +1,6 @@
 import Expense from "../models/expenseModel.js";
 import History from "../models/historyModel.js";
+import { sendNotification } from "../utils/sendPushNotification.js";
 
 export const postDeposit = async (req, res) => {
     try {
@@ -19,7 +20,7 @@ export const postDeposit = async (req, res) => {
             if (!amount || amount <= 0) continue;
 
             const expense = await Expense.findByPk(expenseId);
-            if (!expense) continue;
+            if (!expense || expense.targetAmount == expense.totalDeposited) continue;
 
             const outcome = amount - expense.dailyOutcome;
             expense.totalDeposited += Number(amount);
@@ -28,6 +29,18 @@ export const postDeposit = async (req, res) => {
 
             if (expense.remainingAmount < 0) {
                 expense.remainingAmount = 0;
+            }
+            if(expense.totalDeposited>= expense.targetAmount){
+                expense.totalDeposited = expense.targetAmount;
+                if (req.user.notificationPreferences?.completionAlert?.enabled)
+                    await sendNotification(
+                        req.user,
+                        "completion",
+                        "Deposit Completed",
+                        "Congratulations! Your deposit has been completed successfully.",
+                        { TotalAmount: expense.targetAmount },
+                    );
+
             }
 
             await expense.save();

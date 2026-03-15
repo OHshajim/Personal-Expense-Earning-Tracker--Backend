@@ -11,6 +11,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js"; 
 import historyRoutes from "./routes/historyRoutes.js";
+import supportRoutes from "./routes/supportRoute.js";
 
 import cors from "cors";
 import dotenv from "dotenv";
@@ -22,11 +23,14 @@ const app = express();
 const server = app.listen(PORT, () => console.log(`Server running on ${PORT}`));
 
 initSocket(server);
+
 startNotificationScheduler();
 
+// middleware
 app.use(cors());
 app.use(express.json());
 
+// routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -35,5 +39,7 @@ app.use("/api/deposit", depositRoutes);
 app.use("/api/borrow", borrowRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/support", supportRoutes);
+
 
 export default app;

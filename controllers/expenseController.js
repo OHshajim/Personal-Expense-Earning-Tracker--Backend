@@ -6,14 +6,12 @@ export const createExpense = async (req, res) => {
         title,
         targetAmount,
         totalDeposited,
-        deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        category,
+        deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     } = req.body;
     if (
         !title ||
         !targetAmount ||
         !deadline ||
-        !category ||
         totalDeposited < 0
     ) {
         return res
@@ -32,7 +30,6 @@ export const createExpense = async (req, res) => {
             remainingAmount: targetAmount - totalDeposited,
             UserId: req.user.id,
             deadline,
-            category,
             dailyOutcome:
                 targetAmount /
                 Math.ceil(

@@ -5,6 +5,7 @@ import generateToken from "../utils/generateToken.js";
 import sendEmail from "../utils/sendEmail.js";
 import { uploadImage } from "../utils/imageUpload.js";
 import { getIoInstance } from "../socket/socketHandler.js";
+import { sendNotification } from "../utils/sendPushNotification.js";
 
 export const signup = async (req, res) => {
     try {
@@ -69,6 +70,7 @@ export const sendVerificationEmail = async (req, res) => {
 
         const verificationLink = `${process.env.FRONTEND_URL}/api/auth/verify/${user.verificationToken}`;
             await sendEmail(
+                null,
                 user.email,
                 "Verify your email",
                 `Click to verify: ${verificationLink}`,
@@ -94,7 +96,14 @@ export const verifyEmail = async (req, res) => {
         user.verificationToken = null;
         await user.save();
         const io = getIoInstance();
+
         io.to(user.id).emit("userVerified", { userId: user.id, email: user.email });
+        await sendNotification(
+            user,
+            "Account",
+            "Email Verified",
+            "Your email account has been verified successfully.",
+        );
         res.json({ message: "Email verified successfully" });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
@@ -148,6 +157,7 @@ export const forgotPassword = async (req, res) => {
         await user.save();
 
         await sendEmail(
+            null,
             email,
             "Password Reset",
             `Click to reset: http://localhost:3000/reset-password/${token}`,

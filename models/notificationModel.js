@@ -7,6 +7,7 @@ const Notification = sequelize.define("Notification", {
     title: { type: DataTypes.STRING, allowNull: false },
     message: { type: DataTypes.STRING, allowNull: false },
     isRead: { type: DataTypes.BOOLEAN, defaultValue: false },
+    additionalData: { type: DataTypes.JSON, allowNull: true },
 });
 
 User.hasMany(Notification);

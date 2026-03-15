@@ -13,8 +13,7 @@ const Expense = sequelize.define(
         status: { type: DataTypes.STRING, defaultValue: "active" },
         outcome: { type: DataTypes.FLOAT, defaultValue: 0 },
         deadline: DataTypes.DATE,
-        dailyOutcome: { type: DataTypes.FLOAT, defaultValue: 0 },
-        category: DataTypes.STRING,
+        dailyOutcome: { type: DataTypes.FLOAT, defaultValue: 0 }
     },
     {
         timestamps: true,
